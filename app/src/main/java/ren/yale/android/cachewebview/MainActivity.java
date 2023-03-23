@@ -2,6 +2,7 @@ package ren.yale.android.cachewebview;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -37,6 +38,7 @@ public class MainActivity extends Activity {
 
         mWebView = findViewById(R.id.webview);
 
+        mWebView.addJavascriptInterface(new WebViewJsInterface(), "YonghuiJs");
         CheckBox checkBox = (CheckBox) findViewById(R.id.checkbox);
         checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -66,22 +68,32 @@ public class MainActivity extends Activity {
         initSettings();
         mWebView.setWebViewClient(new WebViewClient(){
 
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                super.onPageStarted(view, url, favicon);
+                System.out.println("zengbobo onPageStarted url="+url);
+            }
 
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
+                System.out.println("zengbobo onPageFinished url="+url);
+                view.loadUrl("javascript:YonghuiJs.sendResource(JSON.stringify(window.performance.timing),window.location.href)");
+
             }
 
            @TargetApi(Build.VERSION_CODES.LOLLIPOP)
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 WebViewCacheInterceptorInst.getInstance().loadUrl(mWebView,request.getUrl().toString());
+               System.out.println("zengbobo shouldOverrideUrlLoading request="+request.getUrl().toString());
                 return true;
             }
 
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 WebViewCacheInterceptorInst.getInstance().loadUrl(mWebView,url);
+                System.out.println("zengbobo shouldOverrideUrlLoading url="+url);
                 return true;
             }
 
@@ -89,18 +101,21 @@ public class MainActivity extends Activity {
             @Nullable
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                System.out.println("zengbobo shouldInterceptRequest request="+request.getUrl().toString());
                 return  WebViewCacheInterceptorInst.getInstance().interceptRequest( request);
             }
 
             @Nullable
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
+                System.out.println("zengbobo shouldInterceptRequest url="+url);
                 return  WebViewCacheInterceptorInst.getInstance().interceptRequest(url);
             }
 
             @Override
             public void onLoadResource(WebView view, String url) {
                 super.onLoadResource(view, url);
+                System.out.println("zengbobo onLoadResource url="+url);
             }
 
             @RequiresApi(api = Build.VERSION_CODES.M)
@@ -110,6 +125,7 @@ public class MainActivity extends Activity {
                 String resp = error.getDescription().toString();
                 String url = request.getUrl().toString();
                 super.onReceivedError(view, request, error);
+                System.out.println("zengbobo onReceivedError url="+url);
             }
         });
         //WebViewCacheInterceptorInst.getInstance().initAssetsData();
